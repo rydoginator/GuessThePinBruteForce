@@ -1,4 +1,4 @@
-import requests, time, csv, random
+import requests, time, csv, random, sys
 
 from os import system, name
 
@@ -15,27 +15,49 @@ def clear():
     else:
         _ = system('clear')
 
-cursor = 0
+def guess(x):
+	zero_x = str(x).zfill(4)
+	userdata = {"guess": zero_x}
+	try:
+		resp = requests.post('https://www.guessthepin.com/prg.php', userdata)
+		return str(resp.content).lower().find("confetti")
+	except:
+		return -2
 
-with open("common.csv") as csvfile:
-	entries = list(csv.reader(csvfile))
-	# copy the list so that it can be reused 
-	default = entries
-	while (len(entries) >= 0):
-		#random
-		dice = random.randint(0, len(entries))
-		guess = entries.pop(dice)
-		clear()
-		# get how many entries used. default file should be 10k lines
-		percent = (10000 - len(entries)) / 100
-		print("Brute forcing... {:.2f} %".format(percent))
-		zero_x = str(guess[0]).zfill(4)
-		userdata = {"guess": zero_x}
-		try:
-		    resp = requests.post('https://www.guessthepin.com/prg.php', userdata)
-		    if (str(resp.content).lower().find("confetti") != -1):
-		        print("Found ", zero_x)
-		        entries = default
-		except: 
-		    print("Connection refused...")
-		    entries = default
+
+
+def main():
+	clear()
+	with open("common.csv") as csvfile:
+		entries = list(csv.reader(csvfile))
+		# copy the list so that it can be reused 
+		default = entries.copy()
+		csvfile.close()	
+
+		while (len(entries) > 0):
+			dice = random.randint(0, len(entries) - 1)
+			pin = entries.pop(dice)
+			res = guess(dice)
+			percent = (10000 - len(entries)) / 100
+			if (res == -2):
+				clear()
+				print("Connection refused...", res)
+				entries.clear()
+				entries = default.copy()
+				sleep(0.5)
+				clear()
+			elif (res == -1):
+				print("Brute forcing... {:.2f} %".format(percent), end = "\r")
+			else:
+				print("Found ", pin[0])
+				f = open('found.txt','r+')
+				data = f.readlines()
+				f.close()
+				data.append(pin[0] + "," + str(10000 - len(entries)) + ",\n")
+				f = open('found.txt','w+')
+				f.writelines(data)
+				f.close()
+				entries.clear()
+				clear()
+				entries = default.copy()			
+main()
