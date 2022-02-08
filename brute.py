@@ -34,30 +34,27 @@ def main():
 		default = entries.copy()
 		csvfile.close()	
 
-		while (len(entries) > 0):
-			dice = random.randint(0, len(entries) - 1)
-			pin = entries.pop(dice)
-			res = guess(dice)
-			percent = (10000 - len(entries)) / 100
-			if (res == -2):
-				clear()
-				print("Connection refused...", res)
-				entries.clear()
-				entries = default.copy()
-				sleep(0.5)
-				clear()
-			elif (res == -1):
-				print("Brute forcing... {:.2f} %".format(percent), end = "\r")
-			else:
-				print("Found ", pin[0])
-				f = open('found.txt','r+')
-				data = f.readlines()
-				f.close()
-				data.append(pin[0] + "," + str(10000 - len(entries)) + ",\n")
-				f = open('found.txt','w+')
-				f.writelines(data)
-				f.close()
-				entries.clear()
-				clear()
-				entries = default.copy()			
+	while (len(entries) > 0):
+		dice = random.randint(0, len(entries) - 1)
+		pin = entries.pop(dice)
+		res = guess(dice)
+		percent = (10000 - len(entries)) / 100
+		if (res == -2):
+			clear()
+			print("Connection refused...", res)
+			entries.clear()
+			entries = default.copy()
+			sleep(0.5)
+			clear()
+		elif (res == -1):
+			print("Brute forcing... {:.2f} %".format(percent), end = "\r")
+		else:
+			clear()
+			print("Found ", pin[0])
+			f = open('found.txt','a+')
+			f.write(pin[0] + "," + str(10000 - len(entries)) + ",\n")
+			f.close()
+			entries.clear()
+			clear()
+			entries = default.copy()			
 main()
